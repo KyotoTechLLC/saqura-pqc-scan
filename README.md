@@ -14,6 +14,8 @@ cryptography that will break once a cryptographically-relevant quantum computer 
 
 > 🆕 **New to this / not a crypto expert?** Read the plain-language walkthrough:
 > **[TUTORIAL.md](TUTORIAL.md)** (Deutsch) — what this is, why it matters, and how to run it.
+> There's also an **interactive HTML version** with a live in-browser scanner:
+> **[docs/tutorial.html](docs/tutorial.html)** (open it in your browser).
 
 ---
 

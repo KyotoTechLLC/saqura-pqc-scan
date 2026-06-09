@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaQura PQC Scan — einfach erklärt</title>
+<style>
+  :root{
+    --purple:#7c5cff; --cyan:#22d3ee;
+    --bg:#0b0d1a; --bg2:#11142a; --card:#161a33; --card2:#1d2245;
+    --ink:#eef1ff; --muted:#9aa3c7; --line:#2a3060;
+    --red:#ff5d6c; --orange:#ffae57; --yellow:#ffd93d; --green:#3ee08f; --grey:#6b73a0;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 700px at 80% -10%,rgba(124,92,255,.18),transparent 60%),
+               radial-gradient(900px 600px at 0% 10%,rgba(34,211,238,.12),transparent 55%),var(--bg);
+    color:var(--ink); line-height:1.65;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  a{color:var(--cyan);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1,h2,h3{line-height:1.25}
+  h2{font-size:1.6rem;margin-top:0}
+  .grad{background:linear-gradient(120deg,var(--purple),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* Hero */
+  header.hero{text-align:center;padding:64px 20px 36px}
+  .logo{width:96px;height:96px;margin:0 auto 18px;filter:drop-shadow(0 8px 30px rgba(124,92,255,.45))}
+  .logo svg{width:100%;height:100%}
+  .hero h1{font-size:2.5rem;margin:.2em 0 .1em;letter-spacing:-.5px}
+  .hero p.lead{font-size:1.2rem;color:var(--muted);max-width:620px;margin:.4em auto 0}
+  .badge{display:inline-block;margin-top:18px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;font-size:.85rem;color:var(--muted);background:rgba(255,255,255,.03)}
+
+  section{padding:40px 0;border-top:1px solid var(--line)}
+  section .eyebrow{color:var(--purple);font-weight:700;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+  .muted{color:var(--muted)}
+  .card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:22px;margin:16px 0}
+
+  /* Analogy / harvest */
+  .harvest{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center;text-align:center;margin:18px 0 6px}
+  .harvest .step{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:16px 10px;transition:.5s}
+  .harvest .emoji{font-size:2rem;display:block;line-height:1.2}
+  .harvest .arrow{color:var(--muted);font-size:1.5rem}
+  .harvest small{color:var(--muted);display:block;margin-top:4px;font-size:.78rem}
+  .harvest.play .s1{box-shadow:0 0 0 2px var(--cyan) inset}
+  .harvest.play .s2{box-shadow:0 0 0 2px var(--orange) inset}
+  .harvest.play .s3{box-shadow:0 0 0 2px var(--red) inset;animation:shake .5s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  @media(max-width:640px){.harvest{grid-template-columns:1fr;}.harvest .arrow{transform:rotate(90deg)}}
+
+  /* Buttons */
+  .btn{cursor:pointer;border:none;border-radius:10px;padding:10px 16px;font-weight:600;font-size:.95rem;background:linear-gradient(120deg,var(--purple),var(--cyan));color:#0b0d1a;transition:.15s}
+  .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn.ghost.active{border-color:var(--purple);color:#fff;background:rgba(124,92,255,.12)}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+
+  /* Live scanner */
+  textarea{width:100%;min-height:190px;background:#0a0c18;color:#dfe5ff;border:1px solid var(--line);border-radius:12px;
+    padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86rem;line-height:1.5;resize:vertical}
+  .scanwrap{display:grid;grid-template-columns:1fr 230px;gap:18px}
+  @media(max-width:720px){.scanwrap{grid-template-columns:1fr}}
+  .gauge{display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .num{font-size:2.2rem;font-weight:800}
+  .gauge .lbl{color:var(--muted);font-size:.85rem;text-align:center;margin-top:4px}
+  .bars{margin-top:6px}
+  .bar{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:.85rem}
+  .bar .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
+  .bar .track{flex:1;height:8px;background:#0a0c18;border-radius:6px;overflow:hidden}
+  .bar .fill{height:100%;width:0;transition:width .5s}
+  .bar .cnt{width:22px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+  .findings{margin-top:14px;max-height:260px;overflow:auto}
+  .find{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin:7px 0;background:var(--card2)}
+  .find .tag{flex:0 0 auto;width:11px;height:11px;border-radius:50%;margin-top:6px}
+  .find b{font-size:.92rem}
+  .find code{background:#0a0c18;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.78rem;color:var(--cyan)}
+  .find small{color:var(--muted);display:block}
+  .empty{color:var(--muted);text-align:center;padding:24px}
+
+  /* Tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .tabpane{display:none}
+  .tabpane.on{display:block}
+  pre.cmd{position:relative;background:#0a0c18;border:1px solid var(--line);border-radius:12px;padding:16px 16px;overflow:auto;margin:10px 0}
+  pre.cmd code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.86rem;color:#dfe5ff;white-space:pre}
+  .copy{position:absolute;top:8px;right:8px;font-size:.74rem;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--muted);cursor:pointer}
+  .copy:hover{color:#fff;border-color:var(--purple)}
+
+  /* CTA cards */
+  .cta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:720px){.cta{grid-template-columns:1fr}}
+  .cta .card{margin:0;display:flex;flex-direction:column}
+  .cta .card h3{margin:.2em 0}
+  .cta .card .btn{margin-top:auto}
+
+  details{border:1px solid var(--line);border-radius:12px;padding:4px 16px;margin:10px 0;background:var(--card)}
+  summary{cursor:pointer;font-weight:600;padding:10px 0}
+  footer{padding:40px 20px 60px;text-align:center;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line)}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:999px;padding:4px 10px;margin:2px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1658.000000 1648.000000" width="300" role="img" aria-label="SaQura Q"><defs><linearGradient id="sq" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><g fill="url(#sq)" transform="translate(0.000000,1648.000000) scale(0.100000,-0.100000)"
+ >
+<path d="M8115 16469 c-309 -20 -800 -87 -1095 -150 -367 -78 -996 -271 -1253
+-383 -71 -31 -133 -56 -138 -56 -5 0 -70 -29 -145 -65 -75 -36 -139 -65 -143
+-65 -4 0 -25 18 -46 40 -64 66 -74 63 -480 -115 -836 -367 -1304 -653 -1875
+-1144 -157 -135 -350 -314 -386 -358 -41 -50 -160 -182 -404 -448 -478 -522
+-854 -1019 -1167 -1545 -232 -391 -435 -814 -568 -1185 -25 -71 -53 -147 -61
+-169 -27 -69 -121 -407 -154 -551 -181 -794 -235 -1742 -155 -2675 75 -868
+269 -1678 539 -2251 24 -53 55 -127 67 -165 53 -169 419 -834 698 -1269 273
+-427 796 -1053 1175 -1407 361 -337 585 -519 1001 -810 1061 -744 2202 -1198
+3460 -1377 568 -81 1076 -97 1715 -55 704 47 1265 158 1945 387 520 175 860
+320 1170 497 55 31 154 85 220 120 189 100 554 332 811 515 l52 37 115 -94
+c63 -51 199 -162 302 -247 104 -85 213 -168 244 -184 63 -34 111 -70 221 -168
+41 -36 98 -83 126 -105 267 -202 329 -248 534 -394 200 -143 271 -190 299
+-197 27 -7 138 -81 186 -125 38 -34 128 -97 215 -151 60 -37 71 -40 145 -43
+45 -2 81 -7 83 -13 2 -6 12 -11 23 -11 10 0 38 -13 61 -29 54 -37 94 -50 85
+-28 -6 17 22 47 44 47 9 0 24 -7 35 -15 22 -16 44 -19 44 -6 0 5 -18 29 -40
+52 -31 33 -38 48 -34 66 5 17 0 31 -15 47 -17 18 -22 38 -25 89 -3 60 -2 67
+15 67 30 0 100 -37 144 -75 44 -39 76 -41 106 -5 9 10 29 20 45 22 18 2 28 8
+26 16 -5 26 83 -3 209 -69 31 -16 59 -29 63 -29 15 0 -25 57 -61 87 -109 91
+-116 106 -57 122 20 5 42 18 48 27 17 23 46 14 128 -40 37 -25 70 -40 73 -35
+8 12 -36 68 -83 106 -44 36 -68 94 -49 124 9 14 8 22 -6 37 -23 25 -22 27 21
+53 20 12 53 37 72 54 25 23 48 34 81 38 44 6 51 3 131 -52 99 -67 123 -79 109
+-53 -6 9 -22 28 -36 41 -14 13 -25 33 -25 44 0 12 -17 38 -37 59 -32 33 -35
+40 -25 62 9 20 7 32 -9 62 -10 21 -19 49 -19 62 0 13 -15 42 -34 65 -41 50
+-54 91 -35 113 10 13 5 22 -33 62 -25 26 -54 63 -66 83 -12 19 -30 44 -42 54
+-11 10 -20 30 -20 45 0 15 -9 35 -20 45 -11 10 -20 24 -20 30 0 7 -15 32 -32
+54 -128 164 -234 274 -377 394 -183 153 -196 168 -159 175 16 3 166 -98 233
+-158 17 -14 53 -42 82 -61 28 -19 59 -46 67 -61 9 -15 41 -48 71 -73 30 -26
+79 -78 110 -115 31 -38 65 -72 75 -75 23 -7 72 4 68 17 -2 5 -33 41 -70 81
+-37 40 -97 110 -134 156 -37 46 -84 99 -105 118 -21 19 -36 40 -33 47 3 7 -21
+35 -53 62 -32 26 -96 83 -143 125 -47 41 -105 90 -130 107 -63 43 -168 143
+-183 172 -7 14 -23 30 -36 36 -13 7 -49 37 -80 67 -52 50 -168 155 -321 287
+-57 50 -121 106 -340 300 -40 36 -98 88 -129 117 l-56 52 26 28 c63 67 469
+664 521 766 11 23 44 75 73 117 292 419 722 1530 903 2335 113 498 190 1065
+180 1314 -4 99 -4 102 -35 128 -25 21 -35 41 -43 83 -6 30 -15 258 -20 507 -5
+249 -14 510 -20 580 -31 374 -83 457 -135 218 -40 -185 -52 -167 -125 190
+-118 571 -246 1023 -395 1385 -60 147 -92 208 -166 320 l-64 95 -3 -68 c-4
+-90 26 -259 93 -535 59 -240 62 -256 43 -250 -23 8 -91 131 -170 312 -112 253
+-229 482 -310 603 -74 110 -110 145 -131 124 -16 -16 14 -99 100 -285 209
+-450 309 -726 263 -726 -5 0 -26 11 -46 25 -46 32 -61 31 -76 -1 -17 -37 9
+-157 88 -409 100 -321 173 -649 188 -845 l5 -75 -14 80 c-49 260 -68 353 -100
+463 -37 130 -118 319 -135 314 -9 -2 -14 22 -12 58 0 8 -4 23 -10 33 -5 11
+-21 58 -35 105 -52 180 -106 241 -162 181 -52 -56 -25 -183 122 -569 38 -99
+63 -188 81 -280 31 -163 44 -310 28 -310 -24 0 -60 105 -158 455 -84 305 -195
+566 -242 573 -39 6 -37 -3 98 -498 103 -378 118 -531 44 -449 -29 33 -53 42
+-70 28 -19 -16 -19 -173 1 -299 67 -420 85 -692 67 -964 -14 -211 -27 -259
+-35 -136 -4 47 -9 147 -12 224 -4 76 -13 200 -21 275 -8 75 -26 246 -39 381
+-27 272 -40 357 -61 412 -14 38 -31 120 -54 258 -19 112 -57 271 -67 281 -6 6
+-23 11 -39 12 -28 2 -29 1 -26 -43 2 -25 12 -82 23 -128 25 -108 24 -124 -7
+-152 -21 -21 -24 -30 -19 -61 5 -30 2 -41 -16 -58 -24 -22 -73 -28 -84 -11 -3
+6 -11 10 -17 10 -13 0 -5 -384 13 -680 8 -113 14 -255 14 -316 0 -107 -1 -113
+-25 -133 -33 -27 -56 -26 -84 2 -22 22 -24 33 -30 203 -7 179 -21 407 -36 604
+-4 58 -13 233 -20 390 -6 157 -15 310 -19 340 -7 54 -8 53 -14 -45 -4 -55 -12
+-133 -17 -173 -6 -40 -10 -127 -10 -194 0 -103 -3 -128 -21 -165 -20 -41 -20
+-44 -4 -115 29 -126 29 -144 6 -167 -12 -12 -30 -21 -40 -21 -23 0 -66 49 -89
+102 -9 21 -19 38 -22 38 -3 0 -13 -14 -23 -31 -9 -17 -31 -36 -48 -42 l-30
+-12 6 -200 c12 -397 11 -833 -2 -847 -10 -10 -13 -2 -14 38 -1 78 -14 99 -22
+34 -4 -30 -7 -76 -7 -101 0 -62 -32 -95 -84 -85 l-36 7 0 -49 c0 -27 -4 -84
+-10 -128 -5 -43 -21 -178 -35 -299 -32 -280 -43 -368 -55 -430 -66 -352 -86
+-436 -160 -655 -54 -162 -89 -243 -171 -405 -102 -200 -283 -547 -332 -635
+-17 -30 -44 -80 -61 -110 -17 -31 -39 -67 -48 -80 l-18 -24 -92 89 c-51 49
+-230 226 -398 393 -407 403 -534 528 -795 777 -121 115 -321 311 -445 436
+-124 124 -277 273 -340 330 -126 114 -197 185 -238 239 -31 40 -223 233 -298
+298 -27 24 -85 79 -129 121 -169 163 -225 211 -245 211 -17 0 -19 -4 -14 -26
+6 -25 5 -26 -20 -22 -31 6 -31 7 -5 -23 22 -25 9 -40 -16 -19 -11 9 -18 10
+-29 1 -9 -7 -33 -9 -67 -5 l-54 6 -10 -33 c-9 -31 -14 -34 -60 -40 -27 -3 -62
+-11 -77 -17 -50 -21 -108 -64 -108 -81 0 -28 -93 -124 -156 -161 -85 -49 -165
+-114 -194 -157 -48 -70 -134 -154 -163 -160 -15 -3 -38 -19 -50 -35 -12 -16
+-36 -46 -54 -67 -36 -42 -73 -121 -73 -156 0 -26 -20 -50 -48 -59 -19 -7 -82
+-100 -106 -158 -9 -21 -16 -62 -16 -91 0 -57 21 -97 84 -159 19 -19 25 -33 21
+-50 -4 -15 6 -46 30 -92 19 -39 35 -75 35 -81 0 -11 37 -54 135 -160 53 -57
+255 -310 301 -377 22 -31 53 -72 71 -91 35 -38 57 -76 49 -84 -6 -6 -23 11
+-126 126 -41 46 -78 91 -81 100 -4 9 -21 30 -39 46 -30 28 -97 117 -92 123 8
+9 -1 22 -17 22 -12 0 -23 11 -29 28 -5 16 -37 61 -70 101 -34 40 -64 81 -67
+92 -4 10 -10 19 -15 19 -5 0 -43 41 -84 90 -74 89 -117 158 -130 212 -6 27
+-60 63 -78 52 -15 -10 0 -51 37 -102 19 -26 48 -65 65 -88 16 -23 30 -48 30
+-57 0 -9 5 -19 10 -22 7 -4 6 -13 -1 -26 -10 -19 -12 -19 -34 -5 -29 19 -35
+20 -35 5 0 -25 42 -69 63 -66 14 1 21 -3 19 -12 -1 -7 22 -46 53 -87 35 -47
+50 -74 41 -74 -8 0 -19 6 -23 14 -4 8 -33 42 -64 77 -31 35 -68 78 -82 94 -26
+31 -51 28 -29 -3 6 -9 19 -29 27 -44 15 -27 15 -28 -10 -28 -22 0 -25 -4 -25
+-35 0 -19 -4 -35 -8 -35 -5 0 -35 27 -67 60 -99 104 -83 50 19 -60 33 -37 78
+-89 99 -116 69 -90 181 -226 252 -304 39 -42 93 -105 120 -140 61 -76 121
+-145 160 -185 17 -17 48 -52 70 -80 56 -69 207 -229 349 -370 113 -112 165
+-157 226 -196 14 -9 91 -80 170 -158 80 -78 165 -159 189 -179 24 -20 72 -64
+106 -97 35 -34 82 -74 106 -90 24 -17 64 -49 88 -72 25 -24 54 -43 66 -43 11
+0 31 -10 45 -23 44 -39 165 -140 251 -209 46 -36 93 -75 104 -85 11 -10 73
+-63 138 -117 64 -55 116 -101 114 -102 -14 -15 -197 -111 -312 -164 -196 -92
+-223 -104 -300 -132 -221 -82 -215 -81 -350 -88 -107 -6 -148 -13 -230 -40
+-55 -18 -104 -35 -110 -39 -8 -6 -77 -34 -270 -111 -88 -35 -472 -130 -642
+-159 -35 -6 -89 -16 -120 -21 -111 -20 -221 -27 -274 -19 -43 7 -59 5 -84 -9
+-39 -23 -39 -52 -1 -71 45 -21 170 -40 271 -42 85 -1 87 -2 45 -11 -66 -15
+-548 -15 -750 0 -224 16 -404 36 -580 62 -362 55 -432 67 -535 90 -67 15 -248
+61 -280 71 -16 5 -57 17 -91 28 -93 29 -264 90 -311 112 -24 10 -46 19 -49 19
+-13 0 -145 61 -344 160 -389 193 -867 521 -1200 824 -104 95 -322 308 -364
+356 -21 25 -62 70 -90 100 -87 93 -158 179 -287 345 -114 146 -325 453 -379
+550 -56 100 -75 132 -93 165 -75 132 -130 238 -185 360 -11 25 -37 81 -57 125
+-202 440 -345 984 -385 1460 -26 304 -38 939 -20 1010 4 17 8 -76 9 -207 0
+-131 6 -284 11 -340 6 -57 15 -155 20 -218 6 -63 15 -142 20 -175 5 -33 21
+-132 35 -220 14 -88 30 -178 35 -200 5 -22 16 -69 24 -105 60 -260 69 -297 87
+-350 4 -14 24 -79 44 -145 58 -187 69 -219 139 -398 143 -365 215 -499 470
+-877 314 -464 403 -575 695 -869 383 -387 754 -678 1147 -901 185 -105 451
+-227 739 -340 11 -4 47 -19 80 -33 33 -14 94 -37 135 -51 41 -13 149 -50 240
+-81 91 -32 212 -70 270 -86 58 -16 134 -38 170 -48 65 -20 147 -41 230 -60 25
+-6 83 -19 130 -30 79 -19 151 -30 387 -62 136 -18 257 9 270 59 13 52 -45 90
+-164 106 -65 9 -175 25 -248 36 -33 5 -107 14 -165 21 -86 10 -116 17 -165 44
+-33 18 -87 38 -120 44 -287 54 -500 109 -675 175 -189 71 -306 119 -403 165
+-60 28 -111 51 -114 51 -19 0 -379 189 -563 296 -185 107 -219 128 -403 252
+-132 89 -432 312 -457 341 -3 3 -48 44 -100 91 -52 47 -97 88 -100 92 -3 4
+-55 58 -115 120 -61 62 -128 136 -150 163 -22 27 -54 65 -71 85 -116 132 -334
+449 -481 700 -62 107 -207 393 -248 490 -15 36 -38 89 -51 118 -13 29 -24 55
+-24 58 0 3 -6 20 -14 37 -7 18 -23 57 -34 87 -38 102 -64 175 -72 200 -259
+804 -332 1495 -246 2315 9 77 17 154 20 170 3 17 10 66 16 110 17 113 57 314
+87 425 13 52 28 109 33 125 79 303 345 874 581 1252 94 150 310 463 395 573
+28 36 81 106 119 155 118 156 176 216 290 297 61 43 200 143 310 223 110 80
+281 202 380 272 99 70 223 161 275 202 52 42 109 86 125 97 35 25 236 129 315
+163 30 13 83 37 116 52 65 29 363 148 549 218 337 128 508 216 542 278 31 59
+167 114 445 183 48 11 111 25 140 30 29 5 118 21 198 35 246 44 361 59 705 90
+94 8 206 25 250 36 78 21 87 21 355 10 249 -11 374 -22 556 -51 84 -14 150
+-12 162 3 33 39 -41 61 -288 87 -58 6 -141 15 -185 20 -44 5 -147 17 -230 26
+-82 9 -172 23 -200 30 -46 13 -34 13 141 10 105 -2 197 0 204 4 21 13 1 30
+-34 30 -19 0 -64 6 -102 14 -125 26 -296 38 -499 36 -270 -4 -285 -3 -263 14
+10 7 48 18 85 25 130 25 729 1 968 -38 33 -5 92 -14 130 -20 39 -6 117 -20
+175 -31 58 -12 133 -24 168 -27 61 -6 62 -6 62 19 0 25 -21 50 -52 61 -29 10
+-21 24 28 47 44 22 50 22 137 10 322 -44 915 -249 1442 -500 179 -85 282 -126
+335 -134 96 -15 553 -294 782 -479 160 -128 235 -179 260 -175 72 10 -5 86
+-332 324 -398 290 -457 334 -490 369 -55 57 -1 30 195 -97 105 -68 177 -108
+195 -108 18 0 -22 59 -44 66 -11 4 -40 25 -65 48 -130 119 -457 332 -595 388
+-63 26 -182 105 -173 114 13 13 132 -26 244 -80 299 -146 746 -455 1088 -755
+88 -77 170 -145 182 -152 31 -17 53 -5 53 30 0 87 -324 409 -814 811 -103 84
+-218 187 -256 229 -38 42 -116 113 -174 156 -58 44 -104 81 -102 82 6 6 240
+-102 321 -149 44 -25 133 -76 197 -113 70 -40 133 -69 158 -72 37 -5 40 -4 40
+19 0 13 -10 34 -22 46 -36 33 -197 122 -558 307 -354 181 -487 257 -458 263
+10 2 100 -33 201 -77 160 -70 260 -111 273 -111 2 0 4 6 4 14 0 19 -46 55 -79
+63 -14 3 -39 17 -55 30 -37 30 -372 195 -535 263 -69 28 -149 56 -180 61 -58
+9 -139 45 -181 80 l-25 21 75 -6 c92 -6 190 -35 402 -119 377 -150 740 -335
+1098 -562 180 -114 245 -149 260 -140 5 3 10 22 10 42 0 30 -9 44 -62 97 -78
+78 -262 216 -477 358 -148 98 -223 143 -559 342 -57 34 -133 85 -170 113 -118
+92 -223 159 -361 228 -161 80 -211 112 -211 135 0 79 -386 221 -985 363 -295
+70 -507 110 -872 162 -233 33 -321 54 -309 74 4 5 38 20 76 32 83 26 100 41
+76 68 -40 45 -223 70 -561 77 -248 6 -306 3 -687 -36 -58 -6 -124 -10 -145 -8
+l-38 4 35 16 c110 51 628 128 1200 178 430 38 527 54 537 87 25 75 -517 124
+-1012 92z m7102 -7226 c-3 -10 -5 -4 -5 12 0 17 2 24 5 18 2 -7 2 -21 0 -30z
+m-13204 -3228 c53 -136 104 -255 170 -400 53 -116 232 -466 281 -549 25 -43
+46 -80 46 -82 0 -6 88 -147 131 -212 16 -23 29 -45 29 -48 0 -9 176 -259 248
+-354 200 -261 532 -608 803 -838 173 -148 264 -222 527 -430 107 -84 242 -177
+312 -214 36 -20 110 -62 165 -95 55 -33 145 -86 200 -118 55 -32 132 -81 170
+-110 39 -28 120 -83 182 -120 62 -38 110 -71 108 -73 -6 -6 -224 101 -380 187
+-156 86 -559 348 -756 491 -63 46 -190 144 -284 219 -93 74 -201 160 -240 190
+-128 102 -334 291 -459 424 -562 595 -993 1322 -1286 2172 -54 158 -36 136 33
+-40z m6967 -3335 c-20 -13 -103 -13 -95 0 3 6 30 10 58 10 37 0 48 -3 37 -10z
+m-137 -17 c-13 -2 -33 -2 -45 0 -13 2 -3 4 22 4 25 0 35 -2 23 -4z m-3203
+-383 c63 -26 133 -56 155 -68 l40 -21 -35 6 c-19 3 -60 16 -90 28 -136 56
+-226 97 -235 106 -17 17 42 -1 165 -51z"/>
+<path d="M9815 15991 c-66 -17 -108 -58 -82 -79 48 -38 517 -101 555 -74 59
+41 -184 148 -357 157 -47 2 -99 1 -116 -4z"/>
+<path d="M15117 11503 c-11 -10 -8 -53 3 -53 6 0 10 14 10 30 0 31 -2 35 -13
+23z"/>
+<path d="M8056 2767 c-21 -16 -17 -44 9 -53 37 -15 93 23 69 46 -18 17 -59 21
+-78 7z"/>
+<path d="M15966 1831 c-3 -5 1 -14 8 -20 12 -10 13 -8 9 8 -6 23 -9 25 -17 12z"/>
+<path d="M16060 1731 c0 -6 4 -13 10 -16 6 -3 7 1 4 9 -7 18 -14 21 -14 7z"/>
+<path d="M16340 1360 c75 -69 115 -82 55 -18 -61 64 -78 77 -100 78 -15 0 -3
+-16 45 -60z"/>
+</g></svg></div>
+  <h1>Was ist <span class="grad">SaQura PQC&nbsp;Scan</span>?</h1>
+  <p class="lead">Ein kostenloses Werkzeug, das in Ihrer Software die Verschlüsselung findet,
+  die ein künftiger Quantencomputer knacken kann — verständlich erklärt und zum Ausprobieren.</p>
+  <div class="badge">⏱️ 5 Minuten Lesezeit · 🧪 mit interaktivem Live-Test</div>
+</header>
+
+<div class="wrap">
+
+<!-- 1. Problem -->
+<section>
+  <div class="eyebrow">Das Problem</div>
+  <h2>Heutige Schlösser, ein künftiger Generalschlüssel</h2>
+  <p>Fast jede Software benutzt <b>Verschlüsselung</b> — eine Art digitales Schloss für
+  Passwörter, Nachrichten, Zahlungen und Verträge. Die heute üblichen Schlösser (sie heißen
+  <b>RSA</b> und <b>ECC</b>) galten jahrzehntelang als sicher.</p>
+  <p>Doch ein neuer Computertyp, der <b>Quantencomputer</b>, wird genau diese Schlösser
+  knacken können. Behörden wie das deutsche <b>BSI</b> und die EU-Richtlinie <b>NIS2</b>
+  drängen deshalb darauf, rechtzeitig auf <b>quantensichere</b> Schlösser umzustellen.</p>
+
+  <div class="card">
+    <b>„Warum jetzt? Den Quantencomputer gibt es doch noch gar nicht."</b>
+    <p class="muted" style="margin:.5em 0 0">Weil Angreifer Daten <b>heute</b> abfangen und
+    aufheben — um sie <b>später</b> zu entschlüsseln. Man nennt das „heute ernten, später
+    entschlüsseln". Drücken Sie auf Play:</p>
+    <div class="harvest" id="harvest">
+      <div class="step s1"><span class="emoji">🔒</span>Ihre Daten<small>heute verschlüsselt</small></div>
+      <div class="arrow">→</div>
+      <div class="step s2"><span class="emoji">🗄️</span>Kopie beim Angreifer<small>aufgehoben für später</small></div>
+      <div class="arrow">→</div>
+      <div class="step s3"><span class="emoji">🔓</span>Quantencomputer<small>öffnet die Kopie</small></div>
+    </div>
+    <div class="btnrow"><button class="btn" onclick="playHarvest()">▶ Abspielen</button></div>
+  </div>
+</section>
+
+<!-- 2. Was es macht -->
+<section>
+  <div class="eyebrow">Was das Werkzeug tut</div>
+  <h2>Es findet die alten Schlösser in Ihrem Code</h2>
+  <p>Bevor man etwas umstellt, muss man wissen: <b>Wo überall</b> steckt veraltete
+  Verschlüsselung? SaQura PQC Scan liest den Programm-Code durch und sortiert jeden Fund
+  in eine von vier Ampel-Stufen:</p>
+  <div class="bars" style="max-width:520px">
+    <div class="bar"><span class="dot" style="background:var(--red)"></span> <b>Quantenverwundbar</b> — RSA, ECC … <span class="muted">→ muss ausgetauscht werden</span></div>
+    <div class="bar"><span class="dot" style="background:var(--orange)"></span> <b>Schon heute unsicher</b> — MD5, DES … <span class="muted">→ längst veraltet</span></div>
+    <div class="bar"><span class="dot" style="background:var(--yellow)"></span> <b>Unklar</b> — gemischte Bibliotheken <span class="muted">→ bitte prüfen</span></div>
+    <div class="bar"><span class="dot" style="background:var(--green)"></span> <b>Quantensicher</b> — ML-KEM … <span class="muted">→ alles gut</span></div>
+  </div>
+  <p>Das Ergebnis: ein <b>leicht lesbarer Bericht mit einer Prozent-Note</b> und eine
+  technische Inventarliste in einem offenen Standard-Format. Das Werkzeug ist
+  <b>kostenlos</b> und <b>verändert nichts</b> — es schaut nur hin.</p>
+</section>
+
+<!-- 3. Live-Test -->
+<section>
+  <div class="eyebrow">Selbst ausprobieren</div>
+  <h2>🧪 Mini-Scanner — direkt hier im Browser</h2>
+  <p class="muted">Wählen Sie ein Beispiel oder fügen Sie eigenen Code ein. Die Auswertung
+  läuft sofort, mit denselben Mustern wie das echte Werkzeug.</p>
+  <div class="btnrow">
+    <button class="btn ghost active" data-sample="mixed">Typisches Projekt</button>
+    <button class="btn ghost" data-sample="old">Alt &amp; unsicher</button>
+    <button class="btn ghost" data-sample="safe">Schon quantensicher</button>
+  </div>
+  <div class="scanwrap">
+    <div>
+      <textarea id="code" spellcheck="false"></textarea>
+    </div>
+    <div class="gauge">
+      <svg width="150" height="150" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="80" fill="none" stroke="#0a0c18" stroke-width="16"/>
+        <circle id="arc" cx="100" cy="100" r="80" fill="none" stroke="var(--green)" stroke-width="16"
+          stroke-linecap="round" stroke-dasharray="502.65" stroke-dashoffset="502.65"/>
+      </svg>
+      <div class="num" id="scoreNum">–</div>
+      <div class="lbl" id="scoreLbl">Readiness-Note</div>
+      <div class="bars" style="width:100%;margin-top:14px">
+        <div class="bar"><span class="dot" style="background:var(--red)"></span><div class="track"><div class="fill" id="b-vuln" style="background:var(--red)"></div></div><span class="cnt" id="c-vuln">0</span></div>
+        <div class="bar"><span class="dot" style="background:var(--orange)"></span><div class="track"><div class="fill" id="b-broken" style="background:var(--orange)"></div></div><span class="cnt" id="c-broken">0</span></div>
+        <div class="bar"><span class="dot" style="background:var(--green)"></span><div class="track"><div class="fill" id="b-safe" style="background:var(--green)"></div></div><span class="cnt" id="c-safe">0</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="findings" id="findings"></div>
+  <p class="muted" style="font-size:.82rem;margin-top:8px">ℹ️ Vereinfachte Demo des echten
+  Werkzeugs. Sie läuft komplett in Ihrem Browser — es wird <b>nichts hochgeladen</b>.</p>
+</section>
+
+<!-- 4. Note erklärt -->
+<section>
+  <div class="eyebrow">Den Bericht lesen</div>
+  <h2>Was bedeutet die Note?</h2>
+  <p>Die Prozent-Note sagt, <b>welcher Anteil</b> der gefundenen Verschlüsselung schon
+  quantensicher ist. <b>Höher ist besser.</b></p>
+  <div class="bars" style="max-width:540px">
+    <div class="bar"><span class="dot" style="background:var(--green)"></span><b>90–100 %</b> &nbsp;<span class="muted">größtenteils zukunftssicher</span></div>
+    <div class="bar"><span class="dot" style="background:var(--yellow)"></span><b>50–89 %</b> &nbsp;<span class="muted">teils sicher, es gibt etwas zu tun</span></div>
+    <div class="bar"><span class="dot" style="background:var(--red)"></span><b>unter 50 %</b> &nbsp;<span class="muted">viel alte Krypto, Handlungsbedarf</span></div>
+    <div class="bar"><span class="dot" style="background:var(--grey)"></span><b>k. A.</b> &nbsp;<span class="muted">keine Verschlüsselung gefunden</span></div>
+  </div>
+  <p>Jeder rote oder orange Fund kommt mit <b>Datei und Zeile</b> — damit ein Entwickler
+  genau weiß, wo er nachschauen muss.</p>
+</section>
+
+<!-- 5. Benutzen -->
+<section>
+  <div class="eyebrow">So benutzen Sie es</div>
+  <h2>Zwei Wege — suchen Sie sich einen aus</h2>
+  <div class="tabs">
+    <button class="btn ghost active" data-tab="a">A · Einmal schnell prüfen</button>
+    <button class="btn ghost" data-tab="b">B · Automatisch auf GitHub</button>
+  </div>
+
+  <div class="tabpane on" id="tab-a">
+    <p>Für „Ich will jetzt einmal sehen, wie es um mein Projekt steht." Voraussetzung:
+    ein Computer mit <a href="https://nodejs.org" target="_blank" rel="noopener">Node.js</a> (kostenlos).
+    Dann im Projektordner ein einziger Befehl:</p>
+    <pre class="cmd"><button class="copy">Kopieren</button><code>npx saqura-pqc-scan .</code></pre>
+    <p class="muted">Der Punkt heißt „prüfe diesen Ordner". Der Bericht erscheint direkt im
+    Fenster. Als Dateien speichern:</p>
+    <pre class="cmd"><button class="copy">Kopieren</button><code>npx saqura-pqc-scan . --report bericht.md --cbom inventar.json</code></pre>
+  </div>
+
+  <div class="tabpane" id="tab-b">
+    <p>Für „Mein Code liegt auf <b>GitHub</b> und soll bei jeder Änderung automatisch geprüft
+    werden." Legen Sie die Datei <code>.github/workflows/pqc-scan.yml</code> mit diesem Inhalt an:</p>
+    <pre class="cmd"><button class="copy">Kopieren</button><code>name: PQC Scan
+on: [pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pqc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: kyototech/saqura-pqc-scan@v1
+        with:
+          comment-on-pr: 'true'</code></pre>
+    <p class="muted">Ab jetzt erscheint bei jeder Änderung automatisch ein Kommentar mit dem
+    aktuellen Bericht — ganz ohne Zutun.</p>
+  </div>
+</section>
+
+<!-- 6. Und dann -->
+<section>
+  <div class="eyebrow">Und dann?</div>
+  <h2>Der Scan findet — SaQura löst</h2>
+  <p>Ein Befund ist erst der Anfang. Das Austauschen ist der nächste Schritt:</p>
+  <div class="cta">
+    <div class="card">
+      <h3>🔧 Selbst umstellen</h3>
+      <p class="muted">Quantensichere Verschlüsselung als fertiger Baustein für gängige
+      Programmiersprachen. Zum Ausprobieren kostenlos.</p>
+      <a class="btn" href="https://saqura.de/docs" target="_blank" rel="noopener">Zur Doku</a>
+    </div>
+    <div class="card">
+      <h3>🤝 Hilfe holen</h3>
+      <p class="muted">Vollständige Bestandsaufnahme und Umstellungsplan — auch für die
+      Bereiche, die dieser Gratis-Scan nicht sieht.</p>
+      <a class="btn" href="https://saqura.de/contact" target="_blank" rel="noopener">Kontakt</a>
+    </div>
+    <div class="card">
+      <h3>👀 In 30 Sek. sehen</h3>
+      <p class="muted">Alt gegen quantensicher, direkt nebeneinander zum Anfassen.</p>
+      <a class="btn" href="https://saqura.de/try" target="_blank" rel="noopener">Demo öffnen</a>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Ehrlich -->
+<section>
+  <div class="eyebrow">Ehrlich gesagt</div>
+  <h2>Was der Scan <i>nicht</i> kann</h2>
+  <details open>
+    <summary>Grenzen des Werkzeugs</summary>
+    <p>Er prüft <b>Programm-Code und dessen Bausteine</b> — <b>nicht</b> den laufenden Server,
+    fertige Programmdateien, Geräte-Firmware, TLS-/Zertifikatseinstellungen oder zugekaufte
+    Software ohne Quellcode. Er arbeitet mit <b>Mustererkennung</b>: ein guter, schneller
+    erster Überblick, aber keine 100-%-Garantie und <b>kein Prüfsiegel</b>.</p>
+    <p class="muted">Sehen Sie ihn als <b>Gesundheits-Schnelltest</b>: Er zeigt schnell und
+    kostenlos, ob und wo es brennt — die gründliche Untersuchung ist der nächste Schritt.</p>
+  </details>
+  <div style="margin-top:8px">
+    <span class="pill">CycloneDX-Standard</span>
+    <span class="pill">Open Source (MIT)</span>
+    <span class="pill">verändert nichts am Code</span>
+    <span class="pill">läuft lokal</span>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p><b>Kurzfassung:</b> Quantencomputer werden heutige Verschlüsselung knacken. Dieses
+  kostenlose Werkzeug zeigt in einer Minute, wo in Ihrer Software noch die alten, knackbaren
+  Verfahren stecken — und SaQura hilft beim Austausch.</p>
+  <p style="margin-top:14px">© 2026 KyotoTech LLC · <a href="https://saqura.de" target="_blank" rel="noopener">saqura.de</a></p>
+</footer>
+
+<script>
+// ---- In-browser scanner: same patterns as the real tool (simplified) ----
+const RULES = [
+  {id:'rsa',name:'RSA',cat:'vuln',re:/\bRSA(?:CryptoServiceProvider|Cng|OAEP|PKCS1|SSA)?\b/g,why:'RSA wird vom Quantencomputer geknackt.'},
+  {id:'ecdsa',name:'ECDSA',cat:'vuln',re:/\bECDSA\b/g,why:'Elliptische-Kurven-Signatur, quantenverwundbar.'},
+  {id:'ecdh',name:'ECDH',cat:'vuln',re:/\bECDH(?:E)?\b|\bECDiffieHellman\b/g,why:'EC-Schlüsselaustausch, quantenverwundbar.'},
+  {id:'ecdsadotnet',name:'ECDsa (.NET)',cat:'vuln',re:/\bECDsa\b/g,why:'.NET-EC-Krypto, quantenverwundbar.'},
+  {id:'dsa',name:'DSA',cat:'vuln',re:/(?<![\w-])DSA\b/g,why:'DSA beruht auf diskretem Logarithmus.'},
+  {id:'dh',name:'Diffie-Hellman',cat:'vuln',re:/\bDiffie[- ]?Hellman\b/g,why:'Klassischer Schlüsselaustausch.'},
+  {id:'curve',name:'EC-Kurve',cat:'vuln',re:/\b(?:Curve25519|X25519|Ed25519|secp256[rk]1|secp384r1|secp521r1|prime256v1|P-?256|P-?384|P-?521)\b/g,why:'Benannte elliptische Kurve, quantenverwundbar.'},
+  {id:'node',name:'Asymm. Schlüssel (Node)',cat:'vuln',re:/generateKeyPair(?:Sync)?\(\s*['"](?:rsa|ec|dsa|dh|x25519|ed25519)['"]/g,why:'Erzeugt quantenverwundbares Schlüsselpaar.'},
+  {id:'jca',name:'JCA asymmetrisch',cat:'vuln',re:/getInstance\(\s*"(?:RSA|EC|ECDSA|ECDH|DSA|DiffieHellman|DH)[^"]*"/g,why:'Fordert quantenverwundbaren Algorithmus an.'},
+  {id:'md5',name:'MD5',cat:'broken',re:/\bMD5\b/g,why:'MD5 ist gebrochen.'},
+  {id:'sha1',name:'SHA-1',cat:'broken',re:/\bSHA-?1\b/g,why:'SHA-1 ist gebrochen.'},
+  {id:'des',name:'DES',cat:'broken',re:/\bDES\b/g,why:'DES hat nur einen 56-Bit-Schlüssel.'},
+  {id:'3des',name:'Triple DES',cat:'broken',re:/\b(?:3DES|TripleDES|DESede)\b/g,why:'3DES ist veraltet.'},
+  {id:'rc4',name:'RC4',cat:'broken',re:/\b(?:RC4|ARC4|ARCFOUR)\b/g,why:'RC4 ist gebrochen.'},
+  {id:'ecb',name:'ECB-Modus',cat:'broken',re:/\bECB\b/g,why:'ECB verrät Muster im Klartext.'},
+  {id:'mlkem',name:'ML-KEM (Kyber)',cat:'safe',re:/\b(?:ML-?KEM|MLKEM|Kyber(?:512|768|1024)?)\b/g,why:'NIST-Post-Quanten-KEM (FIPS 203).'},
+  {id:'mldsa',name:'ML-DSA (Dilithium)',cat:'safe',re:/\b(?:ML-?DSA|MLDSA|Dilithium)\b/g,why:'NIST-Post-Quanten-Signatur (FIPS 204).'},
+  {id:'slhdsa',name:'SLH-DSA (SPHINCS+)',cat:'safe',re:/\b(?:SLH-?DSA|SPHINCS\+?)\b/g,why:'NIST-Post-Quanten-Signatur (FIPS 205).'},
+  {id:'frodo',name:'FrodoKEM',cat:'safe',re:/\bFrodoKEM\b/g,why:'Konservativer Post-Quanten-KEM.'},
+  {id:'mceliece',name:'Classic McEliece',cat:'safe',re:/\b(?:Classic[- ]?)?McEliece\b/g,why:'Konservativer Post-Quanten-KEM.'},
+  {id:'aes',name:'AES',cat:'safe',re:/\bAES-?(?:128|192|256)?\b/g,why:'AES gilt als quantenresistent.'},
+  {id:'sha2',name:'SHA-2 / SHA-3',cat:'safe',re:/\b(?:SHA-?(?:256|384|512)|SHA-?3|SHA3|SHAKE(?:128|256)?)\b/g,why:'Starke Hashfunktion.'},
+  {id:'chacha',name:'ChaCha20',cat:'safe',re:/\bChaCha20\b/g,why:'Starke Stromchiffre.'},
+];
+const PQC_SAFE = new Set(['mlkem','mldsa','slhdsa','frodo','mceliece']);
+const CAT_COLOR = {vuln:'var(--red)',broken:'var(--orange)',safe:'var(--green)'};
+
+function scan(text){
+  const lines = text.split(/\r?\n/);
+  const findings = [];
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    if(line.length>2000) continue;
+    let matched = [];
+    for(const r of RULES){ r.re.lastIndex=0; if(r.re.test(line)) matched.push(r); }
+    if(!matched.length) continue;
+    const hasPqc = matched.some(r=>PQC_SAFE.has(r.id));
+    if(hasPqc) matched = matched.filter(r=>r.id!=='curve'); // Hybrid: X25519+ML-KEM ist ok
+    for(const r of matched) findings.push({name:r.name,cat:r.cat,line:i+1,why:r.why,evidence:line.trim().slice(0,80)});
+  }
+  return findings;
+}
+
+const CIRC = 502.65;
+function render(){
+  const text = document.getElementById('code').value;
+  const f = scan(text);
+  const occ = {vuln:0,broken:0,safe:0};
+  f.forEach(x=>occ[x.cat]++);
+  const total = occ.vuln+occ.broken+occ.safe;
+  const score = total===0 ? null : Math.round(occ.safe/total*100);
+
+  // gauge
+  const arc = document.getElementById('arc');
+  const col = score==null?'var(--grey)':score>=90?'var(--green)':score>=50?'var(--yellow)':'var(--red)';
+  arc.style.stroke = col;
+  arc.style.strokeDashoffset = score==null ? CIRC : CIRC*(1-score/100);
+  document.getElementById('scoreNum').textContent = score==null?'k.A.':score+'%';
+  document.getElementById('scoreNum').style.color = col;
+  document.getElementById('scoreLbl').textContent =
+    score==null?'keine Krypto gefunden':score>=90?'größtenteils sicher':score>=50?'teils sicher':'Handlungsbedarf';
+
+  // bars
+  const max = Math.max(1, occ.vuln, occ.broken, occ.safe);
+  const set=(id,c,n)=>{document.getElementById('c-'+id).textContent=n;document.getElementById('b-'+id).style.width=(n/max*100)+'%';};
+  set('vuln','',occ.vuln); set('broken','',occ.broken); set('safe','',occ.safe);
+
+  // findings
+  const box = document.getElementById('findings');
+  if(!f.length){ box.innerHTML='<div class="empty">Keine bekannten Krypto-Verfahren gefunden. Fügen Sie z. B. <code>RSA</code> oder <code>ML-KEM</code> ein.</div>'; return; }
+  // sort: vuln, broken, safe
+  const order={vuln:0,broken:1,safe:2};
+  f.sort((a,b)=>order[a.cat]-order[b.cat] || a.line-b.line);
+  box.innerHTML = f.map(x=>`<div class="find">
+    <span class="tag" style="background:${CAT_COLOR[x.cat]}"></span>
+    <div><b>${x.name}</b> &nbsp;<code>Zeile ${x.line}</code><small>${x.why}</small></div>
+  </div>`).join('');
+}
+
+// ---- samples ----
+const SAMPLES = {
+  mixed:
+`// Typisches Projekt: ein bisschen von allem
+var rsa = RSA.Create(2048);              // alt
+var hash = MD5.Create();                  // alt & unsicher
+var aes = Aes.Create();                   // AES-256: ok
+var digest = SHA256.HashData(data);       // ok
+var token = crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });`,
+  old:
+`// Alt & unsicher
+public RSA Key() => RSA.Create(4096);
+public ECDsa Sign() => ECDsa.Create();
+var legacy = crypto.createCipheriv('des-ecb', key, iv);  // DES + ECB
+var h = MD5.Create();
+var s = SHA1.Create();
+var stream = "RC4";`,
+  safe:
+`// Schon quantensicher (mit SaQura)
+var kem = MlKem.Generate("ML-KEM-768");        // Post-Quanten
+var sig = MlDsa.Sign(data, "Dilithium3");       // Post-Quanten
+// Hybrid: X25519 + ML-KEM  ->  wird NICHT als verwundbar gewertet
+var hybrid = gen8(QuantumStrength.Highest);
+var aes = "AES-256-GCM";
+var hash = "SHA-256";`
+};
+function loadSample(key){
+  document.getElementById('code').value = SAMPLES[key];
+  render();
+}
+
+// ---- wiring ----
+document.querySelectorAll('[data-sample]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('[data-sample]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    loadSample(b.dataset.sample);
+  });
+});
+document.getElementById('code').addEventListener('input',render);
+
+// tabs
+document.querySelectorAll('[data-tab]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.tabpane').forEach(p=>p.classList.remove('on'));
+    document.getElementById('tab-'+b.dataset.tab).classList.add('on');
+  });
+});
+
+// copy buttons
+document.querySelectorAll('.copy').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const code = btn.parentElement.querySelector('code').textContent;
+    navigator.clipboard.writeText(code).then(()=>{
+      const t=btn.textContent; btn.textContent='✓ Kopiert'; setTimeout(()=>btn.textContent=t,1400);
+    });
+  });
+});
+
+// harvest animation
+function playHarvest(){
+  const h=document.getElementById('harvest');
+  h.classList.remove('play'); void h.offsetWidth; h.classList.add('play');
+}
+
+// init
+loadSample('mixed');
+</script>
+</body>
+</html>

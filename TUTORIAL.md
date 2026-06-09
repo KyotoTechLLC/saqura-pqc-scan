@@ -3,6 +3,10 @@
 Ein Tutorial für alle, die kein Krypto-Experte sind, aber verstehen wollen,
 **was dieses Werkzeug macht und warum es wichtig ist.**
 
+> 💡 **Lieber interaktiv?** Es gibt diese Anleitung auch als **HTML-Seite mit einem
+> Live-Scanner zum Ausprobieren** — einfach `docs/tutorial.html` im Browser öffnen
+> (kein Internet nötig).
+
 ---
 
 ## 1. Worum geht es hier überhaupt?
