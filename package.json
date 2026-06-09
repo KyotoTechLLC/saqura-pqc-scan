@@ -1,0 +1,31 @@
+{
+  "name": "saqura-pqc-scan",
+  "version": "0.1.0",
+  "description": "Free scanner that finds quantum-vulnerable cryptography (RSA, ECC, ...) in your code and dependencies, and produces a CycloneDX CBOM + quantum-readiness report. GitHub Action & CLI.",
+  "type": "module",
+  "bin": {
+    "saqura-pqc-scan": "src/cli.js"
+  },
+  "scripts": {
+    "scan": "node src/cli.js",
+    "test": "node test/run.js"
+  },
+  "keywords": [
+    "post-quantum",
+    "pqc",
+    "cryptography",
+    "cbom",
+    "cyclonedx",
+    "ml-kem",
+    "quantum-safe",
+    "nis2",
+    "crypto-inventory",
+    "security"
+  ],
+  "license": "MIT",
+  "author": "KyotoTech LLC",
+  "homepage": "https://saqura.de",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,34 @@
+# Example: drop this into .github/workflows/pqc-scan.yml in your own repo.
+name: PQC Scan
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pqc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: SaQura PQC Scan
+        id: pqc
+        uses: kyototech/saqura-pqc-scan@v1
+        with:
+          path: '.'
+          cbom-path: 'cbom.json'
+          comment-on-pr: 'true'
+          fail-on: 'none'   # set to 'vulnerable' to block PRs that add RSA/ECC
+
+      - name: Upload CBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbom
+          path: cbom.json
+
+      - name: Show score
+        run: echo "Quantum-readiness score: ${{ steps.pqc.outputs.score }}"
