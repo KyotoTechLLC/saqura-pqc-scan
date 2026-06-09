@@ -12,6 +12,9 @@ cryptography that will break once a cryptographically-relevant quantum computer 
 > post-quantum cryptography. The first step of every migration is **knowing where your
 > crypto is.** This tool gives you that in 30 seconds — for free.
 
+> 🆕 **New to this / not a crypto expert?** Read the plain-language walkthrough:
+> **[TUTORIAL.md](TUTORIAL.md)** (Deutsch) — what this is, why it matters, and how to run it.
+
 ---
 
 ## Quick start (GitHub Action)
