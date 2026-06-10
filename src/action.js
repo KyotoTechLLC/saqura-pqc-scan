@@ -11,7 +11,7 @@ import { scan } from './scanner.js';
 import { buildCbom } from './cbom.js';
 import { summarize, renderMarkdown, badge } from './report.js';
 
-const VERSION = '0.1.0';
+const VERSION = '1.0.0';
 const MARKER = '<!-- saqura-pqc-scan -->';
 
 function input(name, def = '') {

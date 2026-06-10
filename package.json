@@ -1,6 +1,6 @@
 {
   "name": "saqura-pqc-scan",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Free scanner that finds quantum-vulnerable cryptography (RSA, ECC, ...) in your code and dependencies, and produces a CycloneDX CBOM + quantum-readiness report. GitHub Action & CLI.",
   "type": "module",
   "bin": {

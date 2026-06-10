@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: kyototech/saqura-pqc-scan@v1
+      - uses: KyotoTechLLC/saqura-pqc-scan@v1
         with:
           comment-on-pr: 'true'
 ```

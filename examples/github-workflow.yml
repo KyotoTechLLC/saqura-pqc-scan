@@ -17,7 +17,7 @@ jobs:
 
       - name: SaQura PQC Scan
         id: pqc
-        uses: kyototech/saqura-pqc-scan@v1
+        uses: KyotoTechLLC/saqura-pqc-scan@v1
         with:
           path: '.'
           cbom-path: 'cbom.json'

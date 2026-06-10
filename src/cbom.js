@@ -40,7 +40,7 @@ const PRIMITIVE = {
  */
 export function buildCbom(findings, opts = {}) {
   const projectName = opts.projectName || 'scanned-project';
-  const toolVersion = opts.version || '0.1.0';
+  const toolVersion = opts.version || '1.0.0';
   const timestamp = opts.timestamp || new Date().toISOString();
 
   // Group by algorithm name.

@@ -13,7 +13,7 @@ import { scan } from './scanner.js';
 import { buildCbom } from './cbom.js';
 import { summarize, renderMarkdown, badge } from './report.js';
 
-const VERSION = '0.1.0';
+const VERSION = '1.0.0';
 
 function parseArgs(argv) {
   const opts = { path: '.', cbom: null, report: null, json: false, failOn: 'none', badge: null };
