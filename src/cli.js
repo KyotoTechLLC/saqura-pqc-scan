@@ -7,13 +7,14 @@
 //
 // Exit codes: 0 = below threshold, 1 = threshold exceeded, 2 = usage error.
 
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, realpathSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { scan } from './scanner.js';
 import { buildCbom } from './cbom.js';
 import { summarize, renderMarkdown, badge } from './report.js';
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 function parseArgs(argv) {
   const opts = { path: '.', cbom: null, report: null, json: false, failOn: 'none', badge: null };
@@ -91,8 +92,17 @@ export function run(argv) {
   };
 }
 
-// Run when invoked directly.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run when invoked directly. Resolve argv[1] through realpath so this also
+// fires when launched via a bin symlink (npx / npm global install).
+let invokedAsMain = false;
+try {
+  invokedAsMain =
+    !!process.argv[1] &&
+    import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+} catch {
+  invokedAsMain = false;
+}
+if (invokedAsMain) {
   const { exitCode } = run(process.argv.slice(2));
   process.exit(exitCode);
 }
